@@ -6,10 +6,10 @@
 #$ -l h_rt=240:0:0
 #$ -l h_vmem=1G
 
-# Starting timestamp
+# Starting time
 start=$(date +%s)
 
-# Load FastQC module (adjust if needed)
+# Load FastQC module
 module load fastqc
 
 # Run FastQC on all .fastq files in raw_data, output to qc/
