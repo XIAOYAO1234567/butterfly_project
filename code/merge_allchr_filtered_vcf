@@ -1,0 +1,25 @@
+#!/bin/bash
+#$ -cwd
+#$ -V
+#$ -N concat_filtered_allchr
+#$ -l h_vmem=6G
+#$ -l h_rt=2:00:00
+
+module load bcftools/1.19-gcc-12.2.0
+
+# Output file name
+OUT_FILE="merged_allchr.Q30_DP16-66_MQ30.vcf.gz"
+
+# Find and sort all filtered VCF files from 28 chromosomes
+VCF_LIST=$(find bcftools_allsites_filtered_allchr -name "*.allsites.Q30_DP16-66_MQ30.vcf.gz" | sort)
+
+echo "[INFO] Concatenating the following VCF files:"
+echo "$VCF_LIST"
+
+# Concatenate all chromosome VCFs
+bcftools concat $VCF_LIST -Oz -o "$OUT_FILE"
+
+# Index the merged VCF
+tabix -p vcf "$OUT_FILE"
+
+echo "[DONE] Merged VCF written to: $OUT_FILE"
