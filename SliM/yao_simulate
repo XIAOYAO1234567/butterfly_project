@@ -1,1 +1,58 @@
+// SLiM 5.0  WF  nucleotideBased 
+initialize() {
+    initializeSLiMModelType("WF");
+    initializeSLiMOptions(keepPedigrees = T, nucleotideBased = T);
+
+    initializeAncestralNucleotides(
+        "/Users/oukaoruken/Desktop/GCF_947172395.1.ilBicAnyn1.1._genomic.upper.fna"
+    );
+
+    // define：neutral, sweep, balancing
+    initializeMutationTypeNuc("m1", 0.5, "f", 0.0);   // neutral
+    initializeMutationTypeNuc("m2", 0.5, "f", 0.1);   // positive selection
+    initializeMutationTypeNuc("m3", 0.5, "f", -0.1);  // simplified balancing selection
+
+    // Jukes-Cantor mutation matrix
+    mm = mmJukesCantor(1e-6);
+
+    initializeGenomicElementType("g1", m1, 1.0, mm);
+    initializeGenomicElementType("g2", m2, 1.0, mm);
+    initializeGenomicElementType("g3", m3, 1.0, mm);
+
+    // Neutral regions
+    initializeGenomicElement(g1, 146037333, 146059332);
+    initializeGenomicElement(g1, 87759415,  87769414);
+    initializeGenomicElement(g1, 327779241, 327789240);
+    initializeGenomicElement(g1, 242718485, 242748484);
+    initializeGenomicElement(g1, 444890628, 457168541);
+
+    // Sweep regions
+    initializeGenomicElement(g2, 146059333, 146063332);
+    initializeGenomicElement(g2, 87769415,  87799414);
+    initializeGenomicElement(g2, 327789241, 327819240);
+    initializeGenomicElement(g2, 327829241, 327849240);
+
+    // Balancing regions
+    initializeGenomicElement(g3, 135989333, 135991332);
+    initializeGenomicElement(g3, 242748485, 242788484);
+    initializeGenomicElement(g3, 242808485, 242837484);
+    initializeGenomicElement(g3, 444370628, 444380627);
+    initializeGenomicElement(g3, 444660628, 444890627);
+
+    // Uniform recombination
+    initializeRecombinationRate(1e-8);
+}
+
+1 early() {
+    // 5 diploid
+    sim.addSubpop("p1", 5);
+}
+
+50 late() {
+    sim.subpopulations[0].outputVCFSample(
+        5,
+        filePath = "/Users/oukaoruken/Desktop/slim_output/sim_wf_model.vcf"
+    );
+    sim.simulationFinished();
+}
 
