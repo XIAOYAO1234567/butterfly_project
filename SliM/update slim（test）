@@ -1,0 +1,54 @@
+// SLiM 3.x-compatible • Wright-Fisher model • NC_069090.1
+
+initialize() {
+
+    initializeSLiMModelType("WF");
+    initializeSLiMOptions(keepPedigrees = T, nucleotideBased = T);
+
+    initializeAncestralNucleotides("/Users/oukaoruken/Desktop/NC_069090.1.upper.fna");
+
+    // define neutral / sweep / balancing
+    initializeMutationTypeNuc("m1", 0.5, "f", 0.0);    // neutral
+    initializeMutationTypeNuc("m2", 0.5, "f", 0.05);   // sweep: s = 0.05
+    initializeMutationTypeNuc("m3", 0.5, "g", 0.025, 1.0); // balancing: overdominance s = 0.025
+
+    // mutation model（Jukes-Cantor，μ = 1e-6）
+    mm = mmJukesCantor(1e-6);
+
+    // Genomic element types 对应 mutation type
+    initializeGenomicElementType("g1", m1, 1.0, mm);  // neutral
+    initializeGenomicElementType("g2", m2, 1.0, mm);  // sweep
+    initializeGenomicElementType("g3", m3, 1.0, mm);  // balancing
+
+    // Neutral regions
+    initializeGenomicElement(g1, 11403001, 11430000);   
+    initializeGenomicElement(g1, 17850891, 17880891);   
+
+    // Selective sweep region
+    initializeGenomicElement(g2, 11430001, 11470000);   
+
+    // Balancing selection region
+    initializeGenomicElement(g3, 1360001, 1380000);     
+
+    // recombination set
+    initializeRecombinationRate(1e-8);
+}
+
+1 early() {
+    // N = 500
+    sim.addSubpop("p1", 500);
+}
+
+// 100 generations add sweep
+100 early() {
+
+    // p1.genomes.addNewMutation(m2, 11450000);
+}
+
+200 late() {
+    sim.subpopulations[0].outputVCFSample(
+        5,
+        filePath = "/Users/oukaoruken/Desktop/slim_output/NC_069090.1_wf_model.vcf"
+    );
+    sim.simulationFinished();
+}
