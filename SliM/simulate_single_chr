@@ -11,7 +11,7 @@ initialize() {
     initializeMutationTypeNuc("m2", 0.5, "f", 0.1);   // sweep
     initializeMutationTypeNuc("m3", 0.5, "f", -0.1);  // balancing
 
-    mm = mmJukesCantor(1e-6);
+    mm = mmJukesCantor(1e-7);
 
     initializeGenomicElementType("g1", m1, 1.0, mm);
     initializeGenomicElementType("g2", m2, 1.0, mm);
@@ -28,17 +28,47 @@ initialize() {
     initializeGenomicElement(g3, 1360001, 1380000);     
 
     initializeRecombinationRate(1e-8);
+    
+    // Retain fixed alleles in output file
+    m1.convertToSubstitution = F;
+    m2.convertToSubstitution = F;
+    m3.convertToSubstitution = F;
 }
 
 1 early() {
     
     sim.addSubpop("p1", 5);
 }
-
+10 late() {
+    sim.subpopulations[0].outputVCFSample(
+        5,
+        filePath = "/Users/oukaoruken/Desktop/slim_output/NC_069090.1_wf_model1.vcf"
+    );
+}
+20 late() {
+    sim.subpopulations[0].outputVCFSample(
+        5,
+        filePath = "/Users/oukaoruken/Desktop/slim_output/NC_069090.1_wf_model2.vcf"
+    );
+}
+30 late() {
+    sim.subpopulations[0].outputVCFSample(
+        5,
+        filePath = "/Users/oukaoruken/Desktop/slim_output/NC_069090.1_wf_model3.vcf"
+    );
+    sim.simulationFinished();
+}
+40 late() {
+    sim.subpopulations[0].outputVCFSample(
+        5,
+        filePath = "/Users/oukaoruken/Desktop/slim_output/NC_069090.1_wf_model4.vcf"
+    );
+    sim.simulationFinished();
+}
 50 late() {
     sim.subpopulations[0].outputVCFSample(
         5,
-        filePath = "/Users/oukaoruken/Desktop/slim_output/NC_069090.1_wf_model.vcf"
+        filePath = "/Users/oukaoruken/Desktop/slim_output/NC_069090.1_wf_model5.vcf"
     );
     sim.simulationFinished();
 }
@@ -56,7 +86,7 @@ initialize() {
     initializeMutationTypeNuc("m2", 0.5, "f", 0.1);   // selective sweep
     initializeMutationTypeNuc("m3", 0.5, "f", -0.1);  // balancing selection
 
-    mm = mmJukesCantor(1e-6);
+    mm = mmJukesCantor(1e-7);
 
     initializeGenomicElementType("g1", m1, 1.0, mm);
     initializeGenomicElementType("g2", m2, 1.0, mm);
@@ -115,6 +145,7 @@ initialize() {
 
 1 early() {
     sim.addSubpop("p1", 5);
+p1.genomes.readFromVCF('');
 }
 
 50 late() {
