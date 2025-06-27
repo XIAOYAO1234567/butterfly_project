@@ -1,54 +1,69 @@
-// SLiM 3.x-compatible • Wright-Fisher model • NC_069090.1
-
+// SLiM 3.x-compatible • WF model • NC_069110.1
 initialize() {
-
     initializeSLiMModelType("WF");
     initializeSLiMOptions(keepPedigrees = T, nucleotideBased = T);
 
-    initializeAncestralNucleotides("/Users/oukaoruken/Desktop/NC_069090.1.upper.fna");
+    initializeAncestralNucleotides("SLiM/NC_069110.1.upper.fna");
 
-    // define neutral / sweep / balancing
-    initializeMutationTypeNuc("m1", 0.5, "f", 0.0);    // neutral
-    initializeMutationTypeNuc("m2", 0.5, "f", 0.05);   // sweep: s = 0.05
-    initializeMutationTypeNuc("m3", 0.5, "g", 0.025, 1.0); // balancing: overdominance s = 0.025
+    initializeMutationTypeNuc("m1", 0.5, "f", 0.0);
+    initializeMutationTypeNuc("m2", 0.5, "f", 0.1);
+    initializeMutationTypeNuc("m3", 0.5, "f", -0.1);
 
-    // mutation model（Jukes-Cantor，μ = 1e-6）
-    mm = mmJukesCantor(1e-6);
+    mm = mmJukesCantor(1e-7);
 
-    // Genomic element types 对应 mutation type
-    initializeGenomicElementType("g1", m1, 1.0, mm);  // neutral
-    initializeGenomicElementType("g2", m2, 1.0, mm);  // sweep
-    initializeGenomicElementType("g3", m3, 1.0, mm);  // balancing
+    initializeGenomicElementType("g1", m1, 1.0, mm);
+    initializeGenomicElementType("g2", m2, 1.0, mm);
+    initializeGenomicElementType("g3", m3, 1.0, mm);
 
-    // Neutral regions
-    initializeGenomicElement(g1, 11403001, 11430000);   
-    initializeGenomicElement(g1, 17850891, 17880891);   
+    // Neutral
+    initializeGenomicElement(g1, 21468243, 21498243);         // rest neutral
 
-    // Selective sweep region
-    initializeGenomicElement(g2, 11430001, 11470000);   
+    // Balancing
+    initializeGenomicElement(g3, 5630001, 5640000);         // 10 kb
+    initializeGenomicElement(g3, 5920001, 6150000);         // 230 kb
 
-    // Balancing selection region
-    initializeGenomicElement(g3, 1360001, 1380000);     
-
-    // recombination set
     initializeRecombinationRate(1e-8);
+
+    // Retain fixed alleles in output file
+    m1.convertToSubstitution = F;
+    m2.convertToSubstitution = F;
+    m3.convertToSubstitution = F;
 }
 
 1 early() {
-    // N = 500
-    sim.addSubpop("p1", 500);
+    
+    sim.addSubpop("p1", 5);
 }
-
-// 100 generations add sweep
-100 early() {
-
-    // p1.genomes.addNewMutation(m2, 11450000);
-}
-
-200 late() {
+10 late() {
     sim.subpopulations[0].outputVCFSample(
         5,
-        filePath = "/Users/oukaoruken/Desktop/slim_output/NC_069090.1_wf_model.vcf"
+        filePath = "SLiM/NC_069110.1_10_generations.vcf"
+    );
+}
+20 late() {
+    sim.subpopulations[0].outputVCFSample(
+        5,
+        filePath = "SLiM/NC_069110.1_20_generations.vcf"
+    );
+}
+30 late() {
+    sim.subpopulations[0].outputVCFSample(
+        5,
+        filePath = "SLiM/NC_069110.1_30_generations.vcf"
+    );
+    sim.simulationFinished();
+}
+40 late() {
+    sim.subpopulations[0].outputVCFSample(
+        5,
+        filePath = "SLiM/NC_069110.1_40_generations.vcf"
+    );
+    sim.simulationFinished();
+}
+50 late() {
+    sim.subpopulations[0].outputVCFSample(
+        5,
+        filePath = "SLiM/NC_069110.1_50_generations.vcf"
     );
     sim.simulationFinished();
 }
