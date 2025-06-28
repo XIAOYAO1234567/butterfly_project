@@ -1,0 +1,66 @@
+// SLiM 3.x-compatible • WF model • NC_069090.1
+initialize() {
+    initializeSLiMModelType("WF");
+    initializeSLiMOptions(keepPedigrees = T, nucleotideBased = T);
+
+    initializeAncestralNucleotides("SLiM/NC_069090.1.upper.fna");
+
+    // Mutation types
+    initializeMutationTypeNuc("m1", 0.5, "f", 0.0);    // neutral
+    initializeMutationTypeNuc("m2", 1.0, "f", 0.25);   // sweep
+    initializeMutationTypeNuc("m3", 10.0, "f", 0.01);  // balancing
+
+    // Mutation model
+    mm = mmJukesCantor(1e-7);
+
+    // Genomic element types
+    initializeGenomicElementType("g1", m1, 1.0, mm);   // neutral
+    initializeGenomicElementType("g2", m2, 1.0, mm);   // sweep
+    initializeGenomicElementType("g3", m3, 1.0, mm);   // balancing
+
+    // Genomic elements
+    initializeGenomicElement(g2, 11430001, 11470000);     // Sweep
+    initializeGenomicElement(g3, 1360001, 1380000);        // Balancing
+    initializeGenomicElement(g1, 1380001, 1420000);        // Neutral
+    initializeGenomicElement(g1, 11403001, 11430000);      // Neutral
+    initializeGenomicElement(g1, 17880890, 17880891); 
+    initializeRecombinationRate(1e-8);
+
+    // Retain fixed alleles
+    m1.convertToSubstitution = F;
+    m2.convertToSubstitution = F;
+    m3.convertToSubstitution = F;
+}
+
+1 early() {
+    sim.addSubpop("p1", 5);
+    p1.genomes.readFromVCF(
+        filePath = "SLiM/MT1_neutral.cleaned.vcf",
+        mutationType = m1
+    );
+    p1.genomes.readFromVCF(
+        filePath = "SLiM/MT2_sweep.cleaned.vcf",
+        mutationType = m2
+    );
+    p1.genomes.readFromVCF(
+        filePath = "SLiM/MT3_balancing.cleaned.vcf",
+        mutationType = m3
+    );
+}
+
+10 late() {
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069090.1_10_generations.vcf");
+}
+20 late() {
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069090.1_20_generations.vcf");
+}
+30 late() {
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069090.1_30_generations.vcf");
+}
+40 late() {
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069090.1_40_generations.vcf");
+}
+50 late() {
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069090.1_50_generations.vcf");
+    sim.simulationFinished();
+}
