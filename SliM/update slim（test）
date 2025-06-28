@@ -6,8 +6,8 @@ initialize() {
     initializeAncestralNucleotides("SLiM/NC_069110.1.upper.fna");
 
     initializeMutationTypeNuc("m1", 0.5, "f", 0.0);
-    initializeMutationTypeNuc("m2", 0.5, "f", 0.1);
-    initializeMutationTypeNuc("m3", 0.5, "f", -0.1);
+    initializeMutationTypeNuc("m2", 1, "f", 0.25);
+    initializeMutationTypeNuc("m3", 10.0, "f", 0.01);
 
     mm = mmJukesCantor(1e-7);
 
@@ -16,7 +16,7 @@ initialize() {
     initializeGenomicElementType("g3", m3, 1.0, mm);
 
     // Neutral
-    initializeGenomicElement(g1, 21468243, 21498243);         // rest neutral
+    initializeGenomicElement(g1, 21498242, 21498243);         // rest neutral
 
     // Balancing
     initializeGenomicElement(g3, 5630001, 5640000);         // 10 kb
@@ -31,8 +31,8 @@ initialize() {
 }
 
 1 early() {
-    
     sim.addSubpop("p1", 5);
+    p1.genomes.readFromVCF("SLiM/NC_069110.1_slim_input.vcf",mutationType=m3);
 }
 10 late() {
     sim.subpopulations[0].outputVCFSample(
@@ -51,14 +51,12 @@ initialize() {
         5,
         filePath = "SLiM/NC_069110.1_30_generations.vcf"
     );
-    sim.simulationFinished();
 }
 40 late() {
     sim.subpopulations[0].outputVCFSample(
         5,
         filePath = "SLiM/NC_069110.1_40_generations.vcf"
     );
-    sim.simulationFinished();
 }
 50 late() {
     sim.subpopulations[0].outputVCFSample(
