@@ -35,15 +35,15 @@ initialize() {
 1 early() {
     sim.addSubpop("p1", 5);
     p1.genomes.readFromVCF(
-        filePath = "SLiM/NC_069090.1/MT1_neutral.cleaned.vcf",
+        filePath = "SLiM/NC_069090.1/NC_069090.1_MT1_neutral.cleaned.vcf",
         mutationType = m1
     );
     p1.genomes.readFromVCF(
-        filePath = "SLiM/NC_069090.1/MT2_sweep.cleaned.vcf",
+        filePath = "SLiM/NC_069090.1/NC_069090.1_MT2_sweep.cleaned.vcf",
         mutationType = m2
     );
     p1.genomes.readFromVCF(
-        filePath = "SLiM/NC_069090.1/MT3_balancing.cleaned.vcf",
+        filePath = "SLiM/NC_069090.1/NC_069090.1_MT3_balancing.cleaned.vcf",
         mutationType = m3
     );
 }
