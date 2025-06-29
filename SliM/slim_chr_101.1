@@ -3,7 +3,7 @@ initialize() {
     initializeSLiMModelType("WF");
     initializeSLiMOptions(keepPedigrees = T, nucleotideBased = T);
 
-    initializeAncestralNucleotides("SLiM/NC_069101.1.upper.fna");
+    initializeAncestralNucleotides("SLiM/NC_069101.1/NC_069101.1.upper.fna");
 
     // Mutation types
     initializeMutationTypeNuc("m1", 0.5, "f", 0.0);    // neutral
@@ -31,23 +31,23 @@ initialize() {
 1 early() {
     sim.addSubpop("p1", 5);
 
-    p1.genomes.readFromVCF(filePath = "SLiM/NC_069101.1_MT1_neutral.cleaned.vcf", mutationType = m1);
-    p1.genomes.readFromVCF(filePath = "SLiM/NC_069101.1_MT2_sweep.cleaned.vcf", mutationType = m2);
+    p1.genomes.readFromVCF(filePath = "SLiM/NC_069101.1/NC_069101.1_MT1_neutral.cleaned.vcf", mutationType = m1);
+    p1.genomes.readFromVCF(filePath = "SLiM/NC_069101.1/NC_069101.1_MT2_sweep.cleaned.vcf", mutationType = m2);
 }
 
 10 late() {
-    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069101.1_10_generations.vcf");
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069101.1/NC_069101.1_10_generations.vcf");
 }
 20 late() {
-    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069101.1_20_generations.vcf");
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069101.1/NC_069101.1_20_generations.vcf");
 }
 30 late() {
-    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069101.1_30_generations.vcf");
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069101.1/NC_069101.1_30_generations.vcf");
 }
 40 late() {
-    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069101.1_40_generations.vcf");
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069101.1NC_069101.1_40_generations.vcf");
 }
 50 late() {
-    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069101.1_50_generations.vcf");
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069101.1/NC_069101.1_50_generations.vcf");
     sim.simulationFinished();
 }
