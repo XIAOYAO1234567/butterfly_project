@@ -13,13 +13,11 @@ start=$(date +%s)
 source ~/.bashrc
 conda activate rnaseq_qc
 
-# Create output directory
 mkdir -p multiqc_output
 
 # Run MultiQC only on FastQC reports
 multiqc qc/ -o multiqc_output
 
-# Finishing timestamp
 end=$(date +%s)
 runtime=$((end - start))
 
