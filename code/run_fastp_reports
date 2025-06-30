@@ -10,7 +10,6 @@
 source ~/.bashrc
 conda activate rnaseq_qc
 
-# set up dirc
 mkdir -p clean_data_fastp_reports
 
 # generate reports
