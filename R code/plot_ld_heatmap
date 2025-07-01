@@ -1,0 +1,70 @@
+library(ggplot2)
+library(reshape2)
+library(viridis)
+
+ld_file <- "ngsld_NC_069093.1_1210001_1300000_1210001_1230000.ld.tsv"
+ld <- read.table(ld_file, header = FALSE)
+colnames(ld) <- c("pos1", "pos2", "r2")
+ld <- ld[is.finite(ld$r2), ]
+
+region_start <- 1210001
+region_end <- 1230000
+
+ld_sub <- ld[ld$pos1 >= region_start & ld$pos1 <= region_end &
+               ld$pos2 >= region_start & ld$pos2 <= region_end, ]
+
+positions <- sort(unique(c(ld_sub$pos1, ld_sub$pos2)))
+
+ld_matrix <- matrix(NA, nrow = length(positions), ncol = length(positions),
+                    dimnames = list(as.character(positions), as.character(positions)))
+
+for (i in 1:nrow(ld_sub)) {
+  p1 <- as.character(ld_sub$pos1[i])
+  p2 <- as.character(ld_sub$pos2[i])
+  r2 <- ld_sub$r2[i]
+  
+  if (any(is.na(c(p1, p2, r2)))) next
+  
+  if (p1 %in% rownames(ld_matrix) && p2 %in% colnames(ld_matrix)) {
+    if (as.numeric(p1) > as.numeric(p2)) {
+      ld_matrix[p1, p2] <- r2
+    } else if (as.numeric(p2) > as.numeric(p1)) {
+      ld_matrix[p2, p1] <- r2
+    }
+  }
+}
+
+ld_melt <- melt(ld_matrix, na.rm = TRUE)
+colnames(ld_melt) <- c("Y", "X", "r2")
+ld_melt$X <- as.numeric(as.character(ld_melt$X))
+ld_melt$Y <- as.numeric(as.character(ld_melt$Y))
+
+all_pos <- sort(unique(c(ld_melt$X, ld_melt$Y)))
+
+ld_melt$X_index <- match(ld_melt$X, all_pos)
+ld_melt$Y_index <- match(ld_melt$Y, all_pos)
+
+p <- ggplot(ld_melt, aes(x = X_index, y = Y_index, fill = r2)) +
+  geom_tile() +
+  scale_fill_viridis(name = expression(r^2), limits = c(0, 1)) +
+  scale_x_continuous(
+    breaks = seq(1, length(all_pos), length.out = 5),
+    labels = round(all_pos[seq(1, length(all_pos), length.out = 5)])
+  ) +
+  scale_y_continuous(
+    breaks = seq(1, length(all_pos), length.out = 5),
+    labels = round(all_pos[seq(1, length(all_pos), length.out = 5)])
+  ) +
+  labs(title = paste0("LD Heatmap (", region_start, "-", region_end, ")"),
+       x = "Genomic Position", y = "Genomic Position") +
+  theme_minimal(base_size = 15) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    plot.title = element_text(hjust = 0.5, size = 16),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10),
+    panel.grid = element_blank()
+  )
+
+ggsave(paste0("LD_heatmap_NC069093.1_", region_start, "_", region_end, ".pdf"), p, width = 8, height = 7)
