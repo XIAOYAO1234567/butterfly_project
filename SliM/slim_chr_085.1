@@ -1,0 +1,56 @@
+// SLiM 3.x-compatible • WF model • NC_069085.1
+initialize() {
+    initializeSLiMModelType("WF");
+    initializeSLiMOptions(keepPedigrees = T, nucleotideBased = T);
+
+    initializeAncestralNucleotides("SLiM/NC_069085.1/NC_069085.1.upper.fna");
+
+    initializeMutationTypeNuc("m1", 0.5, "f", 0.0);    // neutral
+    initializeMutationTypeNuc("m2", 1.0, "f", 0.25);   // sweep
+    initializeMutationTypeNuc("m3", 10.0, "f", 0.01);  // balancing 
+
+    mm = mmJukesCantor(1e-7);
+
+    initializeGenomicElementType("g1", m1, 1.0, mm);   // neutral
+    initializeGenomicElementType("g2", m2, 1.0, mm);   // sweep
+    initializeGenomicElementType("g3", m3, 1.0, mm);   // balancing
+
+    // Sweep 
+    initializeGenomicElement(g2, 10725001, 10750000);
+    initializeGenomicElement(g2, 11040001, 11060000);
+
+    // Neutral 
+    initializeGenomicElement(g1, 10860001, 10920000);
+    initializeGenomicElement(g1, 19462322, 19462323);
+
+    initializeRecombinationRate(1e-8);
+
+    m1.convertToSubstitution = F;
+    m2.convertToSubstitution = F;
+    m3.convertToSubstitution = F;
+}
+
+1 early() {
+    sim.addSubpop("p1", 5);
+
+    // Neutral 
+    p1.genomes.readFromVCF(
+        filePath = "SLiM/NC_069085.1/NC_069085.1_MT1_neutral.cleaned.vcf",
+        mutationType = m1
+    );
+
+    // Sweep 
+    p1.genomes.readFromVCF(
+        filePath = "SLiM/NC_069085.1/NC_069085.1_MT2_sweep.cleaned.vcf",
+        mutationType = m2
+    );
+}
+
+10 late()  { sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069085.1/NC_069085.1_10_generations.vcf"); }
+20 late()  { sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069085.1/NC_069085.1_20_generations.vcf"); }
+30 late()  { sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069085.1/NC_069085.1_30_generations.vcf"); }
+40 late()  { sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069085.1/NC_069085.1_40_generations.vcf"); }
+50 late()  {
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069085.1/NC_069085.1_50_generations.vcf");
+    sim.simulationFinished();
+}
