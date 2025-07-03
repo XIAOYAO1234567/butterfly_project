@@ -47,38 +47,23 @@ initialize() {
 }
 
 10 late() { 
-    sim.subpopulations[0].outputVCFSample(5, 
-    filePath = "SLiM/NC_069087.1/NC_069087.1_10_generations.vcf"); 
-    p1.outputMSSample(10,
-    replace = F,
-    filePath = "SLiM/NC_069087.1/NC_069087.1_10_generations.ms");
-    }
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069087.1/NC_069087.1_10_generations.vcf"); 
+    p1.outputMSSample(10, replace = F, filePath = "SLiM/NC_069087.1/NC_069087.1_10_generations.ms");
+}
 20 late() { 
-    sim.subpopulations[0].outputVCFSample(5, 
-    filePath = "SLiM/NC_069087.1/NC_069087.1_20_generations.vcf"); 
-    p1.outputMSSample(10,
-    replace = F,
-    filePath = "SLiM/NC_069087.1/NC_069087.1_20_generations.ms");
-    }
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069087.1/NC_069087.1_20_generations.vcf"); 
+    p1.outputMSSample(10, replace = F, filePath = "SLiM/NC_069087.1/NC_069087.1_20_generations.ms");
+}
 30 late() { 
-    sim.subpopulations[0].outputVCFSample(5, 
-    filePath = "SLiM/NC_069087.1/NC_069087.1_30_generations.vcf"); 
-    p1.outputMSSample(10,
-    replace = F,
-    filePath = "SLiM/NC_069087.1/NC_069087.1_30_generations.ms");
-    }
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069087.1/NC_069087.1_30_generations.vcf"); 
+    p1.outputMSSample(10, replace = F, filePath = "SLiM/NC_069087.1/NC_069087.1_30_generations.ms");
+}
 40 late() { 
-    sim.subpopulations[0].outputVCFSample(5, 
-    filePath = "SLiM/NC_069087.1/NC_069087.1_40_generations.vcf"); 
-    p1.outputMSSample(10,
-    replace = F,
-    filePath = "SLiM/NC_069087.1/NC_069087.1_40_generations.ms");
-    }
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069087.1/NC_069087.1_40_generations.vcf"); 
+    p1.outputMSSample(10, replace = F, filePath = "SLiM/NC_069087.1/NC_069087.1_40_generations.ms");
+}
 50 late() {
-    sim.subpopulations[0].outputVCFSample(5, 
-    filePath = "SLiM/NC_069087.1/NC_069087.1_50_generations.vcf");
-    p1.outputMSSample(10,
-    replace = F,
-    filePath = "SLiM/NC_069087.1/NC_069087.1_50_generations.ms");
+    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069087.1/NC_069087.1_50_generations.vcf");
+    p1.outputMSSample(10, replace = F, filePath = "SLiM/NC_069087.1/NC_069087.1_50_generations.ms");
     sim.simulationFinished();
 }
