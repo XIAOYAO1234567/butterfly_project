@@ -6,13 +6,13 @@ initialize() {
     initializeAncestralNucleotides("SLiM/NC_069087.1/NC_069087.1.upper.fna");
 
     initializeMutationTypeNuc("m1", 0.5, "f", 0.0);    // neutral   (MT = 1)
-    initializeMutationTypeNuc("m2", 1.0, "f", 0.25);   // sweep     (备用)
+    initializeMutationTypeNuc("m2", 1.0, "f", 0.25);   // sweep    
     initializeMutationTypeNuc("m3", 10.0, "f", 0.01);  // balancing (MT = 3)
 
     mm = mmJukesCantor(1e-7);
 
     initializeGenomicElementType("g1", m1, 1.0, mm);   // neutral
-    initializeGenomicElementType("g2", m2, 1.0, mm);   // sweep   (备用)
+    initializeGenomicElementType("g2", m2, 1.0, mm);  
     initializeGenomicElementType("g3", m3, 1.0, mm);   // balancing
 
     // Balancing (MT = 3)
@@ -46,11 +46,39 @@ initialize() {
     );
 }
 
-10 late() { sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069087.1/NC_069087.1_10_generations.vcf"); }
-20 late() { sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069087.1/NC_069087.1_20_generations.vcf"); }
-30 late() { sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069087.1/NC_069087.1_30_generations.vcf"); }
-40 late() { sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069087.1/NC_069087.1_40_generations.vcf"); }
+10 late() { 
+    sim.subpopulations[0].outputVCFSample(5, 
+    filePath = "SLiM/NC_069087.1/NC_069087.1_10_generations.vcf"); 
+    p1.outputMSSample(10,
+    replace = F,
+    filePath = "SLiM/NC_069087.1/NC_069087.1_10_generations.ms");
+    }
+20 late() { 
+    sim.subpopulations[0].outputVCFSample(5, 
+    filePath = "SLiM/NC_069087.1/NC_069087.1_20_generations.vcf"); 
+    p1.outputMSSample(10,
+    replace = F,
+    filePath = "SLiM/NC_069087.1/NC_069087.1_20_generations.ms");
+    }
+30 late() { 
+    sim.subpopulations[0].outputVCFSample(5, 
+    filePath = "SLiM/NC_069087.1/NC_069087.1_30_generations.vcf"); 
+    p1.outputMSSample(10,
+    replace = F,
+    filePath = "SLiM/NC_069087.1/NC_069087.1_30_generations.ms");
+    }
+40 late() { 
+    sim.subpopulations[0].outputVCFSample(5, 
+    filePath = "SLiM/NC_069087.1/NC_069087.1_40_generations.vcf"); 
+    p1.outputMSSample(10,
+    replace = F,
+    filePath = "SLiM/NC_069087.1/NC_069087.1_40_generations.ms");
+    }
 50 late() {
-    sim.subpopulations[0].outputVCFSample(5, filePath = "SLiM/NC_069087.1/NC_069087.1_50_generations.vcf");
+    sim.subpopulations[0].outputVCFSample(5, 
+    filePath = "SLiM/NC_069087.1/NC_069087.1_50_generations.vcf");
+    p1.outputMSSample(10,
+    replace = F,
+    filePath = "SLiM/NC_069087.1/NC_069087.1_50_generations.ms");
     sim.simulationFinished();
 }
