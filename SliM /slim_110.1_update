@@ -1,0 +1,87 @@
+
+// SLiM Wright–Fisher NC_069110.1 
+initialize() {
+    initializeSLiMModelType("WF");
+    initializeSLiMOptions(keepPedigrees = T, nucleotideBased = T);
+
+    initializeAncestralNucleotides(
+        "SLiM_update/inputs/NC_069110.1/NC_069110.1.upper.fna");
+
+  
+    initializeMutationTypeNuc("m1", 0.5 , "f", 0.00);   // neutral
+    initializeMutationTypeNuc("m3", 10.0, "f", 0.01);   // balancing
+
+    mm = mmJukesCantor(1e-7);                           
+
+    initializeGenomicElementType("g1", m1, 1.0, mm);   // neutral
+    initializeGenomicElementType("g3", m3, 1.0, mm);   // balancing
+
+    initializeGenomicElement(g3, 17400001, 17420000);   // Balancing
+    initializeGenomicElement(g3,  5920001,  5945000);   // Balancing
+    initializeGenomicElement(g3, 21498242, 21498243);   // Rest 
+
+    initializeRecombinationRate(1e-8);                
+
+    m1.convertToSubstitution = F;
+    m3.convertToSubstitution = F;
+}
+
+1 early() {
+    sim.addSubpop("p1", 5);
+
+    p1.genomes.readFromVCF(
+        filePath = "SLiM_update/inputs/NC_069110.1/NC_069110.1_MT3_balancing.cleaned.vcf",
+        mutationType = m3 );
+
+    p1.setSubpopulationSize(10000);
+}
+
+50  late() {
+    sim.subpopulations[0].outputVCFSample(5,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_50_generations.vcf");
+    p1.outputMSSample(10, replace = F,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_50_generations.ms");
+}
+100 late() {
+    sim.subpopulations[0].outputVCFSample(5,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_100_generations.vcf");
+    p1.outputMSSample(10, replace = F,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_100_generations.ms");
+}
+150 late() {
+    sim.subpopulations[0].outputVCFSample(5,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_150_generations.vcf");
+    p1.outputMSSample(10, replace = F,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_150_generations.ms");
+}
+200 late() {
+    sim.subpopulations[0].outputVCFSample(5,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_200_generations.vcf");
+    p1.outputMSSample(10, replace = F,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_200_generations.ms");
+}
+250 late() {
+    sim.subpopulations[0].outputVCFSample(5,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_250_generations.vcf");
+    p1.outputMSSample(10, replace = F,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_250_generations.ms");
+}
+300 late() {
+    sim.subpopulations[0].outputVCFSample(5,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_300_generations.vcf");
+    p1.outputMSSample(10, replace = F,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_300_generations.ms");
+}
+350 late() {
+    sim.subpopulations[0].outputVCFSample(5,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_350_generations.vcf");
+    p1.outputMSSample(10, replace = F,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_350_generations.ms");
+}
+400 late() {
+    sim.subpopulations[0].outputVCFSample(5,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_400_generations.vcf");
+    p1.outputMSSample(10, replace = F,
+        filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_400_generations.ms");
+    sim.simulationFinished();
+}
