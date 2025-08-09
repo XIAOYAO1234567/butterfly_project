@@ -1,0 +1,200 @@
+suppressPackageStartupMessages({
+  library(dplyr); library(readr); library(tidyr); library(tibble); library(stringr); library(ggplot2)
+})
+
+in_dir   <- "angsd_output_10kb_100kb/bio&ml_overlap"
+ml_reg_f <- file.path(in_dir, "ML_regions_nonblacklist.tsv")   
+bio_reg_f<- file.path(in_dir, "Bio_regions_nonblacklist.tsv") 
+
+win_all_f <- file.path(in_dir, "angsd_pi_tajima_10kb/window_flags_10kb_labeled.tsv")
+
+out_dir  <- file.path(in_dir, "figs_tables")
+dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+
+canon_chrom <- function(x) sub("\\.\\d+$","", sub("^chr","", as.character(x), ignore.case=TRUE))
+canon_label <- function(x){
+  y <- tolower(trimws(as.character(x)))
+  ifelse(grepl("balanc",y),"balancing",
+         ifelse(grepl("sweep",y),"sweep",
+                ifelse(grepl("neut",y),"neutral", y)))
+}
+
+normalize_regions <- function(df){
+  df %>%
+    mutate(CHROM = canon_chrom(CHROM),
+           START = as.integer(START),
+           END   = as.integer(END),
+           LABEL = canon_label(LABEL)) %>%
+    filter(!is.na(CHROM), !is.na(START), !is.na(END), START <= END)
+}
+
+overlap_anybp_stats <- function(A, B){
+  if(nrow(A)==0 || nrow(B)==0) return(list(A_hit=rep(FALSE,nrow(A)), B_hit=rep(FALSE,nrow(B)), pair_n=0L))
+  A <- A %>% arrange(CHROM, START, END)
+  B <- B %>% arrange(CHROM, START, END)
+  Ahit <- rep(FALSE, nrow(A)); Bhit <- rep(FALSE, nrow(B)); pairs <- 0L
+  a_idx <- split(seq_len(nrow(A)), A$CHROM)
+  b_idx <- split(seq_len(nrow(B)), B$CHROM)
+  for(ch in union(names(a_idx), names(b_idx))){
+    ia <- a_idx[[ch]]; ib <- b_idx[[ch]]
+    if(is.null(ia) || is.null(ib)) next
+    i <- 1L; j <- 1L
+    while(i <= length(ia) && j <= length(ib)){
+      s1 <- A$START[ia[i]]; e1 <- A$END[ia[i]]
+      s2 <- B$START[ib[j]]; e2 <- B$END[ib[j]]
+      if(e1 < s2){ i <- i + 1L; next }
+      if(e2 < s1){ j <- j + 1L; next }
+      Ahit[ia[i]] <- TRUE; Bhit[ib[j]] <- TRUE; pairs <- pairs + 1L
+      if(e1 <= e2) i <- i + 1L else j <- j + 1L
+    }
+  }
+  list(A_hit=Ahit, B_hit=Bhit, pair_n=pairs)
+}
+
+reciprocal_ge50_pairs <- function(A, B){
+  if(nrow(A)==0 || nrow(B)==0) return(0L)
+  A <- A %>% arrange(CHROM, START, END); B <- B %>% arrange(CHROM, START, END)
+  pairs <- 0L
+  a_idx <- split(seq_len(nrow(A)), A$CHROM)
+  b_idx <- split(seq_len(nrow(B)), B$CHROM)
+  for(ch in union(names(a_idx), names(b_idx))){
+    ia <- a_idx[[ch]]; ib <- b_idx[[ch]]
+    if(is.null(ia) || is.null(ib)) next
+    i <- 1L; j <- 1L
+    while(i <= length(ia) && j <= length(ib)){
+      s1 <- A$START[ia[i]]; e1 <- A$END[ia[i]]; len1 <- e1 - s1 + 1
+      s2 <- B$START[ib[j]]; e2 <- B$END[ib[j]]; len2 <- e2 - s2 + 1
+      if(e1 < s2){ i <- i + 1L; next }
+      if(e2 < s1){ j <- j + 1L; next }
+      ov <- max(0, min(e1,e2) - max(s1,s2) + 1)
+      if(ov > 0){
+        cov1 <- ov/len1; cov2 <- ov/len2
+        if(min(cov1, cov2) >= 0.5) pairs <- pairs + 1L
+      }
+      if(e1 <= e2) i <- i + 1L else j <- j + 1L
+    }
+  }
+  pairs
+}
+
+draw_two_set_venn <- function(nameA, nameB, nA, nB, nAB, file_png, file_pdf,
+                              colA = "#377eb8", colB = "#e41a1c", title = NULL){
+  r <- 1
+  cA <- c(-0.6, 0); cB <- c(0.6, 0)
+  theta <- seq(0, 2*pi, length.out = 500)
+  circ <- function(cx, cy) data.frame(x = cx + r*cos(theta), y = cy + r*sin(theta))
+  p <- ggplot() +
+    geom_polygon(data = circ(cA[1], cA[2]), aes(x, y), alpha = 0.25, fill = colA, color = colA, linewidth = 0.6) +
+    geom_polygon(data = circ(cB[1], cB[2]), aes(x, y), alpha = 0.25, fill = colB, color = colB, linewidth = 0.6) +
+    annotate("text", x = cA[1]-0.0, y = 0.75, label = nameA, size = 4.2, fontface = "bold") +
+    annotate("text", x = cB[1]+0.0, y = 0.75, label = nameB, size = 4.2, fontface = "bold") +
+    annotate("text", x = cA[1]-0.35, y = 0,    label = nA - nAB, size = 5) +
+    annotate("text", x = 0,          y = 0,    label = nAB,       size = 5, fontface="bold") +
+    annotate("text", x = cB[1]+0.35, y = 0,    label = nB - nAB, size = 5) +
+    coord_equal(xlim=c(-2,2), ylim=c(-1.4,1.4)) +
+    theme_void() +
+    theme(plot.title = element_text(hjust=0.5, face="bold", size=12),
+          plot.margin = margin(10,10,10,10))
+  if(!is.null(title)) p <- p + ggtitle(title)
+  ggsave(file_png, p, width=4, height=3.2, dpi=300)
+  ggsave(file_pdf, p, width=4, height=3.2, device=cairo_pdf)
+  p
+}
+
+compute_metrics <- function(ML, BIO){
+  out_any <- list(); out_rec <- list()
+  for(lab in c("sweep","balancing")){
+    A <- ML  %>% filter(LABEL==lab) %>% select(CHROM, START, END)
+    B <- BIO %>% filter(LABEL==lab) %>% select(CHROM, START, END)
+    a_n <- nrow(A); b_n <- nrow(B)
+    st  <- overlap_anybp_stats(A,B)
+    
+    prec <- if(a_n>0) mean(st$A_hit) else 0
+    reca <- if(b_n>0) mean(st$B_hit) else 0
+    jac  <- (st$pair_n) / (a_n + b_n - st$pair_n)
+    out_any[[lab]] <- tibble(Label=lab, SetA_ML=a_n, SetB_Bio=b_n,
+                             Overlap_pairs=st$pair_n,
+                             Precision_ML=round(prec,3),
+                             Recall_Bio=round(reca,3),
+                             Jaccard=round(jac,3))
+  
+    pairs50 <- reciprocal_ge50_pairs(A,B)
+    jac50   <- pairs50 / (a_n + b_n - pairs50)
+    out_rec[[lab]] <- tibble(Label=lab, SetA_ML=a_n, SetB_Bio=b_n,
+                             Overlap_pairs_ge50=pairs50,
+                             Precision_ML_ge50 = NA_real_,   # 可选：再推导严格口径下的精确/召回
+                             Recall_Bio_ge50    = NA_real_,
+                             Jaccard_ge50       = round(jac50,3))
+  }
+  list(any = bind_rows(out_any), recip = bind_rows(out_rec))
+}
+
+per_chr_agreement_table <- function(ML, BIO, lab){
+  A <- ML  %>% filter(LABEL==lab) %>% select(CHROM, START, END)
+  B <- BIO %>% filter(LABEL==lab) %>% select(CHROM, START, END)
+  if(nrow(A)==0 && nrow(B)==0) return(tibble())
+
+  st <- overlap_anybp_stats(A,B)
+  A$CAT <- ifelse(st$A_hit, "ML∩Bio", "ML-only")
+  B$CAT <- ifelse(st$B_hit, "ML∩Bio", "Bio-only")
+  bind_rows(
+    A %>% count(CHROM, CAT, name="N"),
+    B %>% count(CHROM, CAT, name="N")
+  ) %>% group_by(CHROM, CAT) %>% summarise(N = sum(N), .groups="drop")
+}
+
+plot_per_chr_stack <- function(tab, lab, file_png, file_pdf){
+  if(nrow(tab)==0) return(invisible(NULL))
+  p <- ggplot(tab, aes(x=CHROM, y=N, fill=CAT)) +
+    geom_bar(stat="identity", width=0.75) +
+    scale_fill_manual(values=c("ML-only"="#377eb8", "Bio-only"="#e41a1c", "ML∩Bio"="#4daf4a")) +
+    labs(title=paste0("Per-chromosome agreement (", lab, ")"),
+         x="Chromosome", y="Region count", fill="Category") +
+    theme_minimal(base_size=11) +
+    theme(axis.text.x = element_text(angle=60, hjust=1),
+          plot.title = element_text(face="bold"))
+  ggsave(file_png, p, width=8, height=3.5, dpi=300)
+  ggsave(file_pdf, p, width=8, height=3.5, device=cairo_pdf)
+  p
+}
+
+ml_reg  <- read_tsv(ml_reg_f,  show_col_types = FALSE) %>% normalize_regions()
+bio_reg <- read_tsv(bio_reg_f, show_col_types = FALSE) %>% normalize_regions()
+
+m <- compute_metrics(ml_reg, bio_reg)
+tab_any  <- m$any
+tab_recip<- m$recip
+write_tsv(tab_any,  file.path(out_dir, "Table1_metrics_anybp.tsv"))
+write_tsv(tab_recip,file.path(out_dir, "TableS1_metrics_recip50.tsv"))
+
+for (lab in c("sweep","balancing")) {
+  A <- ml_reg  %>% filter(LABEL==lab) %>% select(CHROM, START, END)
+  B <- bio_reg %>% filter(LABEL==lab) %>% select(CHROM, START, END)
+  st <- overlap_anybp_stats(A,B)
+  nA <- nrow(A); nB <- nrow(B); nAB <- st$pair_n
+  draw_two_set_venn(
+    nameA = "ML regions", nameB = "Bio regions",
+    nA = nA, nB = nB, nAB = nAB,
+    file_png = file.path(out_dir, paste0("venn_", lab, ".png")),
+    file_pdf = file.path(out_dir, paste0("venn_", lab, ".pdf")),
+    colA = if(lab=="sweep") "#377eb8" else "#984ea3",
+    colB = if(lab=="sweep") "#ff7f00" else "#e41a1c",
+    title = paste0("Venn (", lab, ", any-bp overlap)")
+  )
+}
+
+for (lab in c("sweep","balancing")) {
+  tab <- per_chr_agreement_table(ml_reg, bio_reg, lab)
+  write_tsv(tab, file.path(out_dir, paste0("per_chr_agreement_", lab, ".tsv")))
+  plot_per_chr_stack(
+    tab, lab,
+    file_png = file.path(out_dir, paste0("per_chr_agreement_", lab, ".png")),
+    file_pdf = file.path(out_dir, paste0("per_chr_agreement_", lab, ".pdf"))
+  )
+}
+
+cat("Saved to:\n",
+    " - Table1 (any-bp): ", file.path(out_dir, "Table1_metrics_anybp.tsv"), "\n",
+    " - TableS1 (recip>=50%): ", file.path(out_dir, "TableS1_metrics_recip50.tsv"), "\n",
+    " - Venn PNG/PDF for sweep/balancing\n",
+    " - Per-chrom stacked bars & TSV\n")
