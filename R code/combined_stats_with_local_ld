@@ -1,179 +1,124 @@
-# Combine Tajima's D, π, and Local LD in one figure (PDF)
-
-# Load required packages =
 library(ggplot2)
 library(dplyr)
 library(readr)
 library(patchwork)
 
-#  Function: compute genome-wide Tajima's D quantile 
-compute_genome_tajimaD_quantile <- function(genome_tajimaD_df) {
-  td_low <- quantile(genome_tajimaD_df$TajimaD, 0.05, na.rm = TRUE)
-  td_high <- quantile(genome_tajimaD_df$TajimaD, 0.95, na.rm = TRUE)
-  
-  cat(" Genome-wide Tajima's D quantiles:\n")
-  cat("  5% quantile:", td_low, "\n")
-  cat(" 95% quantile:", td_high, "\n")
-  
-  return(list(td_low = td_low, td_high = td_high))
+compute_genome_tajimaD_quantile <- function(df) {
+  td_low  <- quantile(df$TajimaD, 0.05, na.rm = TRUE)
+  td_high <- quantile(df$TajimaD, 0.95, na.rm = TRUE)
+  cat("Genome-wide Tajima's D 5%:", round(td_low, 4), " 95%:", round(td_high, 4), "\n")
+  list(td_low = td_low, td_high = td_high)
 }
 
-#  Function: compute genome-wide π quantile 
-compute_genome_pi_quantile <- function(genome_pi_df) {
-  pi_low <- quantile(genome_pi_df$tP / genome_pi_df$nSites, 0.05, na.rm = TRUE)
-  pi_high <- quantile(genome_pi_df$tP / genome_pi_df$nSites, 0.95, na.rm = TRUE)
-  
-  cat(" Genome-wide π quantiles:\n")
-  cat("  5% quantile:", pi_low, "\n")
-  cat(" 95% quantile:", pi_high, "\n")
-  
-  return(list(pi_low = pi_low, pi_high = pi_high))
+compute_genome_pi_quantile <- function(df) {
+  pi_vals <- as.numeric(df$tP) / as.numeric(df$nSites)
+  pi_low  <- quantile(pi_vals, 0.05, na.rm = TRUE)
+  pi_high <- quantile(pi_vals, 0.95, na.rm = TRUE)
+  cat("Genome-wide π 5%:", signif(pi_low, 4), " 95%:", signif(pi_high, 4), "\n")
+  list(pi_low = pi_low, pi_high = pi_high)
 }
 
-#  Function: plot Local LD from precomputed summary 
-plot_local_ld <- function(region_name, window_size = 500) {
-  
-  ld_summary_file <- paste0("/Users/oukaoruken/Desktop/ngsld_output/ngsld_", region_name, "_localLD_", window_size, "bp.tsv")
-  
-  cat(" Reading Local LD summary:", ld_summary_file, "\n")
-  
-  local_ld <- read_tsv(ld_summary_file)
-  
-  # Plot Local LD 
-  p_local_ld <- ggplot(local_ld, aes(x = WinCenter, y = avg_r2)) +
-    geom_point(size = 0.3, alpha = 0.7, color = "darkgreen") +
-    geom_smooth(method = "loess", span = 0.3, color = "black", se = FALSE, linewidth = 0.8) +
-    labs(title = "Local LD", x = "Genomic position (bp)", y = expression("Local average " ~ r^2)) +
-    theme_classic(base_size = 10) +
+pick_span <- function(width_bp) {
+  if (is.na(width_bp)) return(0.2)
+  if (width_bp <= 5e5) 0.3 else if (width_bp <= 1e6) 0.2 else 0.1
+}
+
+plot_combined_stats <- function(candidate_df, tajima_q, pi_q, region_name, window_size, output_pdf) {
+  df <- candidate_df %>%
+    mutate(
+      TajimaD     = as.numeric(Tajima),
+      tP          = as.numeric(tP),
+      nSites      = as.numeric(nSites),
+      tP_per_site = tP / nSites
+    ) %>%
+    filter(!is.na(TajimaD), !is.na(tP_per_site), nSites > 0)
+
+  width_bp <- max(df$WinCenter, na.rm = TRUE) - min(df$WinCenter, na.rm = TRUE)
+  span_val <- pick_span(width_bp)
+  td_low   <- tajima_q$td_low
+  td_high  <- tajima_q$td_high
+  pi_low   <- pi_q$pi_low
+  pi_high  <- pi_q$pi_high
+
+  cat("Region:", region_name, "| Width(Mb):", round(width_bp/1e6, 3), "| Windows:", nrow(df), "\n")
+
+  base_theme <- theme_classic(base_size = 10) +
     theme(
-      plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-      axis.title = element_text(face = "bold", size = 10),
-      axis.text = element_text(color = "black", size = 8),
-      axis.line = element_line(color = "black")
-    )
-  
-  return(p_local_ld)
-}
-
-# Function: plot combined stats
-plot_combined_stats <- function(candidate_df, genome_tajima_quantile, genome_pi_quantile,
-                                region_name = "Candidate Region", window_size, output_pdf) {
-  
-  candidate_df <- candidate_df %>%
-    mutate(tP_per_site = as.numeric(tP) / as.numeric(nSites))
-  
-  td_low <- genome_tajima_quantile$td_low
-  td_high <- genome_tajima_quantile$td_high
-  pi_low <- genome_pi_quantile$pi_low
-  pi_high <- genome_pi_quantile$pi_high
-  
-  region_width <- max(candidate_df$WinCenter, na.rm = TRUE) - min(candidate_df$WinCenter, na.rm = TRUE)
-  window_count <- nrow(candidate_df)
-  cat(" Region:", region_name, 
-      "| Width:", round(region_width / 1e6, 2), "Mb ", 
-      "| n windows:", window_count, "\n")
-  
-  smooth_span <- ifelse(region_width <= 5e5, 0.3,
-                        ifelse(region_width <= 1e6, 0.2, 0.1))
-  
-  # Plot Tajima's D
-  p_td <- ggplot(candidate_df, aes(x = WinCenter, y = TajimaD)) +
-    geom_hline(yintercept = c(td_low, td_high), 
-               linetype = "longdash", color = c("#0072B2", "#D55E00"), linewidth = 0.6) +
-    labs(title = "Tajima's D", x = "Genomic position (bp)", y = "Tajima's D",
-         subtitle = bquote(.(paste0("5% quantile: ", round(td_low, 2), 
-                                    "; 95% quantile: ", round(td_high, 2))))) +
-    theme_classic(base_size = 10) +
-    theme(
-      plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+      plot.title    = element_text(face = "bold", size = 12, hjust = 0.5),
       plot.subtitle = element_text(size = 10, hjust = 0.5),
-      axis.title = element_text(face = "bold", size = 10),
-      axis.text = element_text(color = "black", size = 8),
-      axis.line = element_line(color = "black")
-    ) +
+      axis.title    = element_text(face = "bold", size = 10),
+      axis.text     = element_text(color = "black", size = 8),
+      axis.line     = element_line(color = "black")
+    )
+
+  p_td <- ggplot(df, aes(x = WinCenter, y = TajimaD)) +
+    geom_hline(yintercept = td_low,  linetype = "longdash", linewidth = 0.6, color = "#0072B2") +
+    geom_hline(yintercept = td_high, linetype = "longdash", linewidth = 0.6, color = "#D55E00") +
     geom_point(size = 0.3, alpha = 0.7, color = "orange") +
-    geom_smooth(method = "loess", span = smooth_span, color = "black", 
-                se = FALSE, linewidth = 0.6, alpha = 0.8) +
-    coord_cartesian(ylim = c(-2, max(candidate_df$TajimaD, na.rm = TRUE) * 1.2))
-  
-  # Plot π
-  p_pi <- ggplot(candidate_df, aes(x = WinCenter, y = tP_per_site)) +
+    geom_smooth(method = "loess", span = span_val, color = "black", se = FALSE, linewidth = 0.6) +
     labs(
-      title = expression("Nucleotide Diversity (" * pi * ")"),
-      x = "Genomic position (bp)", 
-      y = expression(pi ~ "(per site)"),
-      subtitle = bquote(.(paste0("Genome-wide 5%: ", signif(pi_low, 2), 
-                                 "; 95%: ", signif(pi_high, 2))))
+      title    = "Tajima's D",
+      x        = "Genomic position (bp)",
+      y        = "Tajima's D",
+      subtitle = sprintf("Genome-wide 5%%: %.2f; 95%%: %.2f", td_low, td_high)
     ) +
-    coord_cartesian(ylim = c(0, pi_high * 1.2)) + 
-    theme_classic(base_size=10) +
-    theme(
-      plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-      plot.subtitle = element_text(size = 10, hjust = 0.5, color = "grey30"),
-      axis.title = element_text(face = "bold", size = 10),
-      axis.text = element_text(color = "black", size = 8),
-      axis.line = element_line(color = "black")
-    ) +
+    coord_cartesian(ylim = c(-2, max(df$TajimaD, na.rm = TRUE) * 1.2)) +
+    base_theme
+
+  p_pi <- ggplot(df, aes(x = WinCenter, y = tP_per_site)) +
     geom_point(size = 0.3, alpha = 0.7, color = "purple") +
-    geom_smooth(
-      method = "loess", 
-      span = smooth_span, 
-      color = "black",
-      se = FALSE, 
-      linewidth = 0.8, 
-      alpha = 1)
-  
-  # Plot Local LD
-  p_local_ld <- plot_local_ld(region_name, window_size = window_size)
-  
-  # Combine all 3 plots
-  combined_plot <- p_td / p_pi / p_local_ld + 
-    plot_annotation(title = paste0("Genetic Diversity + Local LD in ", region_name, " (Window = ", window_size, "bp)"),
-                    theme = theme(plot.title = element_text(face = "bold", size = 14, hjust = 0.5))) +
-    plot_layout(heights = c(1, 1, 1))
-  
-  # Save
-  ggsave(output_pdf, plot = combined_plot, width = 8, height = 12, dpi = 300, device = cairo_pdf)
-  cat("Combined plot with Local LD saved to:", output_pdf, "\n\n")
+    geom_smooth(method = "loess", span = span_val, color = "black", se = FALSE, linewidth = 0.8) +
+    labs(
+      title    = expression("Nucleotide Diversity (" * pi * ")"),
+      x        = "Genomic position (bp)",
+      y        = expression(pi ~ "(per site)"),
+      subtitle = sprintf("Genome-wide 5%%: %.3g; 95%%: %.3g", pi_low, pi_high)
+    ) +
+    coord_cartesian(ylim = c(0, pi_high * 1.2)) +
+    base_theme +
+    theme(plot.title = element_text(face = "bold", size = 12, hjust = 0.5))
+
+  combined <- p_td / p_pi +
+    plot_annotation(
+      title = sprintf("Tajima's D and %s — %s (Window = %s bp)", "\u03C0", region_name, window_size),
+      theme = theme(plot.title = element_text(face = "bold", size = 14, hjust = 0.5))
+    )
+
+  ggsave(output_pdf, plot = combined, width = 8, height = 12, dpi = 300, device = cairo_pdf)
+  cat("Saved:", output_pdf, "\n\n")
 }
 
-#  Main script 
-
-# Step 1: Load genome-wide theta.10kb.pestPG ===
-cat("Loading genome-wide theta.10kb.pestPG...\n")
-genome_df <- read_tsv("/Users/oukaoruken/Desktop/angsd_output_10kb_100kb/theta.10kb.pestPG", skip = 1,
-                      col_names = c("Region", "CHROM", "WinCenter", "tW", "tP", "tF", "tH", "tL",
-                                    "Tajima", "fuf", "fud", "fayh", "zeng", "nSites")) %>%
+genome_df <- read_tsv(
+  "/Users/oukaoruken/Desktop/angsd_output_10kb_100kb/theta.10kb.pestPG",
+  skip = 1,
+  col_names = c("Region","CHROM","WinCenter","tW","tP","tF","tH","tL","Tajima","fuf","fud","fayh","zeng","nSites")
+) %>%
   mutate(TajimaD = as.numeric(Tajima)) %>%
   filter(!is.na(TajimaD), !is.na(tP), !is.na(nSites), nSites > 0)
 
-# Step 2: Compute genome-wide quantiles 
-genome_tajima_quantile <- compute_genome_tajimaD_quantile(genome_df)
-genome_pi_quantile <- compute_genome_pi_quantile(genome_df)
+tajima_q <- compute_genome_tajimaD_quantile(genome_df)
+pi_q     <- compute_genome_pi_quantile(genome_df)
 
-# Step 3: Auto detect candidate region files 
 target_dir <- "/Users/oukaoruken/Desktop"
-candidate_files <- list.files(target_dir, pattern = "_(100bp|500bp|1kb).pestPG$", recursive = TRUE, full.names = TRUE)
-cat(" Found", length(candidate_files), "candidate region files to process.\n\n")
+candidate_files <- list.files(
+  target_dir,
+  pattern = "_(100bp|500bp|1kb)\\.pestPG$",
+  recursive = TRUE,
+  full.names = TRUE
+)
 
-# Step 4: Loop over candidate regions 
-for (candidate_file in candidate_files) {
-  cat(" Processing:", candidate_file, "\n")
-  
-  region_name <- gsub(".*/theta_|_\\d+bp.pestPG", "", candidate_file)
-  window_size <- as.numeric(sub(".*_(\\d+)bp.pestPG", "\\1", candidate_file))
-  
-  candidate_df <- read_tsv(candidate_file, skip = 1,
-                           col_names = c("Region", "CHROM", "WinCenter", "tW", "tP", "tF", "tH", "tL",
-                                         "Tajima", "fuf", "fud", "fayh", "zeng", "nSites")) %>%
-    mutate(TajimaD = as.numeric(Tajima),
-           tP_per_site = as.numeric(tP) / as.numeric(nSites)) %>%
-    filter(!is.na(TajimaD), !is.na(tP_per_site), !is.na(nSites), nSites > 0)
-  
-  output_pdf <- paste0("combined_", region_name, "_", window_size, "bp_withLocalLD.pdf")
-  
-  plot_combined_stats(candidate_df, genome_tajima_quantile, genome_pi_quantile, 
-                      region_name, window_size, output_pdf)
+cat("Found", length(candidate_files), "candidate region files\n")
+
+for (f in candidate_files) {
+  region_name <- gsub(".*/theta_|_\\d+bp\\.pestPG", "", f)
+  window_size <- as.numeric(sub(".*_(\\d+)bp\\.pestPG", "\\1", f))
+  candidate_df <- read_tsv(
+    f,
+    skip = 1,
+    col_names = c("Region","CHROM","WinCenter","tW","tP","tF","tH","tL","Tajima","fuf","fud","fayh","zeng","nSites")
+  )
+  out_pdf <- sprintf("combined_%s_%sbp.pdf", region_name, window_size)
+  plot_combined_stats(candidate_df, tajima_q, pi_q, region_name, window_size, out_pdf)
 }
 
-cat("All combined plots with Local LD completed!\n")
+cat("All combined plots completed\n")
