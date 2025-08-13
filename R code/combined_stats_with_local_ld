@@ -98,7 +98,6 @@ genome_df <- read_tsv(
 
 tajima_q <- compute_genome_tajimaD_quantile(genome_df)
 pi_q     <- compute_genome_pi_quantile(genome_df)
-
 target_dir <- "/Users/oukaoruken/Desktop"
 candidate_files <- list.files(
   target_dir,
