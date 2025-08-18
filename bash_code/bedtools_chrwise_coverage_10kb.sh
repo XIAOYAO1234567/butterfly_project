@@ -4,7 +4,6 @@
 #$ -l h_rt=24:00:00
 #$ -l h_vmem=32G
 #$ -pe smp 1
-#$ -N run_chrwise_cov_100kb
 
 source ~/.bashrc
 conda activate bedtools_env
@@ -18,8 +17,8 @@ CHR_LIST=(
 
 BAM_DIR="mapping_results"
 OUT_BAM_DIR="mapping_results_chrwise"
-WIN_DIR="reference_data/chr_windows"
-COV_DIR="coverage_output_chrwise"
+WIN_DIR="reference_data/chr_windows_10kb"
+COV_DIR="coverage_output_chrwise_10kb"
 REF_IDX="reference_data/GCF_947172395.1_ilBicAnyn1.1_genomic.fna.fai"
 
 mkdir -p "$OUT_BAM_DIR" "$WIN_DIR" "$COV_DIR"
@@ -27,17 +26,17 @@ mkdir -p "$OUT_BAM_DIR" "$WIN_DIR" "$COV_DIR"
 for BAM in $BAM_DIR/*.sorted.bam; do
   SAMPLE=$(basename "$BAM" .sorted.bam)
   for CHR in "${CHR_LIST[@]}"; do
-    WIN_BED="$WIN_DIR/${CHR}.100kb.bed"
-    Q1BAM="$OUT_BAM_DIR/${SAMPLE}.${CHR}.bam"
-    COV_FILE="$COV_DIR/${SAMPLE}_${CHR}_coverage.bed"
+    WIN_BED="$WIN_DIR/${CHR}.10kb.bed"
     if [ ! -f "$WIN_BED" ]; then
-      CHR_LEN=$(awk -v chr="$CHR" '$1 == chr {print $2}' "$REF_IDX")
-      bedtools makewindows -g <(echo -e "$CHR\t$CHR_LEN") -w 100000 -s 100000 > "$WIN_BED"
+      CHR_LEN=$(awk -v chr="$CHR" '$1==chr{print $2}' "$REF_IDX")
+      [ -z "$CHR_LEN" ] && echo "[WARN] $CHR not in FAI, skip." && continue
+      bedtools makewindows -g <(echo -e "$CHR\t$CHR_LEN") -w 10000 -s 10000 > "$WIN_BED"
     fi
-    samtools view -b -q 1 "$BAM" "$CHR" > "$Q1BAM"
-    samtools index "$Q1BAM"
-    bedtools coverage -a "$WIN_BED" -b "$Q1BAM" -mean > "$COV_FILE"
+    CHR_BAM="$OUT_BAM_DIR/${SAMPLE}.${CHR}.bam"
+    [ ! -f "$CHR_BAM" ] && samtools view -b -q 1 "$BAM" "$CHR" > "$CHR_BAM" && samtools index "$CHR_BAM"
+    COV_FILE="$COV_DIR/${SAMPLE}_${CHR}_coverage.bed"
+    bedtools coverage -a "$WIN_BED" -b "$CHR_BAM" -mean > "$COV_FILE"
   done
 done
 
-echo "[ALL DONE] Coverage calculation complete (100kb)"
+echo "[ALL DONE] chrwise BAM and 10kb coverage completed."
