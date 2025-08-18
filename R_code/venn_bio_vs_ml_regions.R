@@ -7,7 +7,7 @@ library(purrr)
 
 in_dir  <- "angsd_output_10kb"
 bio_file <- file.path(in_dir, "Bio_regions_nonblacklist.tsv")
-ml_file  <- file.path(in_dir, "ML_regions_nonblacklist.tsv")
+ml_file  <- file.path(in_dir, "prediction_results_merged.tsv")
 out_counts <- file.path(in_dir, "venn_region_cluster_counts_colored.tsv")
 out_pdf    <- file.path(in_dir, "venn_regions_colored.pdf")
 out_png_sw <- file.path(in_dir, "venn_regions_colored_sweep.png")
