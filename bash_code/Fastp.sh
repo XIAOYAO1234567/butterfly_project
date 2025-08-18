@@ -28,7 +28,6 @@ for sample in raw_data/*_1.fastq.gz; do
     --json fastp_reports/${base}.json \
     --report_title "${base} fastp report"
 done
-
 end=$(date +%s)
 runtime=$((end - start))
 
