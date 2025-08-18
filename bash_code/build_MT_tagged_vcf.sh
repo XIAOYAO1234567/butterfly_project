@@ -1,10 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-VCF="merged.NC_069094.1.snps.Q30_DP10-70_MQ30.vcf.gz"
+VCF="merged.NC_069094.1.snps.Q30_DP10-70_MQ30.vcf.gz" # we can change the chromosome in this place, 094 chromosome is just an example
 CHR="NC_069094.1" 
 
-BAL_REGIONS=("370001 400000" "680001 710000")
+BAL_REGIONS=("370001 400000" "680001 710000") # we can change the regions in this place, it is just an example here
 NEU_REGIONS=("530001 580000")
 
 rm -f balancing.body.vcf neutral.body.vcf header.vcf
