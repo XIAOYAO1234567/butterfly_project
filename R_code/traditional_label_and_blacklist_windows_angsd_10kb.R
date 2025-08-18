@@ -4,7 +4,7 @@ library(GenomicRanges)
 
 theta_file <- "theta.10kb.pestPG"
 coverage_dir <- path.expand("~/Desktop/coverage_output_chrwise_10kb")
-outdir <- "angsd_pi_tajima_plots_10kb"
+outdir <- "angsd_output_10kb"
 dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 
 cov_q <- 0.05
