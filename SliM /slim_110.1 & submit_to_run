@@ -106,5 +106,5 @@ initialize() {
 #$ -j y
 
 source ~/miniforge3/bin/activate slim_env  
-slim simulate_NC_105.slim
+slim simulate_NC_110.slim
 
