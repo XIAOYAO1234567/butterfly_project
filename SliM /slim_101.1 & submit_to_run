@@ -5,7 +5,6 @@ initialize() {
     initializeAncestralNucleotides(
         "SLiM_update/inputs/NC_069101.1/NC_069101.1.upper.fna");
 
-    // 突变类型
     initializeMutationTypeNuc("m1", 0.5, "f", 0.00);    // neutral
     initializeMutationTypeNuc("m2", 1.0, "f", 0.02);    // sweep
 
@@ -14,7 +13,6 @@ initialize() {
     initializeGenomicElementType("g1", m1, 1.0, mm);
     initializeGenomicElementType("g2", m2, 1.0, mm);
 
-    // 基因组区段
     initializeGenomicElement(g2,  6810001,  6840000);  // Sweep
     initializeGenomicElement(g1,  6740001,  6810000);  // Neutral
     initializeGenomicElement(g1, 15486370, 15486371);  // Rest
@@ -26,10 +24,7 @@ initialize() {
 }
 
 1 early() {
-    // ① 初始化 5 个体（10 条 genome）
     sim.addSubpop("p1", 5);
-
-    // ② 读入中性 & 扫频 初始样本
     p1.genomes.readFromVCF(
         filePath = "SLiM_update/inputs/NC_069101.1/NC_069101.1_MT1_neutral.cleaned.vcf",
         mutationType = m1 );
@@ -37,11 +32,9 @@ initialize() {
         filePath = "SLiM_update/inputs/NC_069101.1/NC_069101.1_MT2_sweep.cleaned.vcf",
         mutationType = m2 );
 
-    // ③ 克隆扩张到 10000 个体
     p1.setSubpopulationSize(10000);
 }
 
-// ***** 每 100 代采样一次 *****
 100  late() {
     sim.subpopulations[0].outputVCFSample(100,
         filePath = outdir + "/NC_069101.1_100_generations.vcf");
@@ -103,3 +96,17 @@ initialize() {
         filePath = outdir + "/NC_069101.1_1000_generations.ms");
     sim.simulationFinished();
 }
+
+
+
+
+#!/bin/bash
+#$ -N slim_sim
+#$ -cwd
+#$ -l h_vmem=12G
+#$ -pe smp 1
+#$ -l h_rt=8:00:00
+#$ -j y
+
+source ~/miniforge3/bin/activate slim_env  
+slim simulate_NC_101.slim
