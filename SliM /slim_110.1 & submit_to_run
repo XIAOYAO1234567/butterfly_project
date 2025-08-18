@@ -94,3 +94,17 @@ initialize() {
         filePath = "SLiM_update/outputs/NC_069110.1/NC_069110.1_1000_generations.ms");
     sim.simulationFinished();
 }
+
+
+
+#!/bin/bash
+#$ -N slim_sim
+#$ -cwd
+#$ -l h_vmem=12G
+#$ -pe smp 1
+#$ -l h_rt=8:00:00
+#$ -j y
+
+source ~/miniforge3/bin/activate slim_env  
+slim simulate_NC_105.slim
+
