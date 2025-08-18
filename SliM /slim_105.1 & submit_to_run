@@ -5,7 +5,6 @@ initialize() {
     initializeAncestralNucleotides(
         "SLiM_update/inputs/NC_069105.1/NC_069105.1.upper.fna");
 
-    // 突变类型
     initializeMutationTypeNuc("m1", 0.5 , "f", 0.00);   // neutral
     initializeMutationTypeNuc("m2", 1.0 , "f", 0.02);   // sweep
 
@@ -14,10 +13,9 @@ initialize() {
     initializeGenomicElementType("g1", m1, 1.0, mm);
     initializeGenomicElementType("g2", m2, 1.0, mm);
 
-    // 定义区段
-    initializeGenomicElement(g2, 5050001, 5070000);     // Sweep 区段
-    initializeGenomicElement(g1, 5150001, 5200000);     // Neutral 区段
-    initializeGenomicElement(g1, 13224084, 13224085);   // Rest (singleton)
+    initializeGenomicElement(g2, 5050001, 5070000);     
+    initializeGenomicElement(g1, 5150001, 5200000);    
+    initializeGenomicElement(g1, 13224084, 13224085);   
 
     initializeRecombinationRate(1e-8);                  // r = 1×10⁻⁸
 
@@ -26,22 +24,16 @@ initialize() {
 }
 
 1 early() {
-    // ① 初始化 5 个体（10 条 genome）
     sim.addSubpop("p1", 5);
-
-    // ② 读取中性 & 扫频 VCF
     p1.genomes.readFromVCF(
         filePath = "SLiM_update/inputs/NC_069105.1/NC_069105.1_MT1_neutral.cleaned.vcf",
         mutationType = m1 );
     p1.genomes.readFromVCF(
         filePath = "SLiM_update/inputs/NC_069105.1/NC_069105.1_MT2_sweep.cleaned.vcf",
         mutationType = m2 );
-
-    // ③ 克隆扩张到 10000 个体
     p1.setSubpopulationSize(10000);
 }
 
-// ***** 每 100 代采样一次，直到 2000 代 *****
 100  late() {
     sim.subpopulations[0].outputVCFSample(100,
         filePath = "SLiM_update/outputs/NC_069105.1/NC_069105.1_100_generations.vcf");
