@@ -6,7 +6,7 @@ library(GenomicRanges)
 library(ggplot2)
 
 base_dir <- "~/Desktop/angsd_output_10kb"
-tier1_file <- file.path(base_dir, "tier1_consensus_regions_10kb.tsv")
+tier1_file <- file.path(base_dir, "overlap_overall.tsv")
 gff_file   <- file.path(base_dir, "GCF_947172395.1_ilBicAnyn1.1_genomic.gff")
 outdir     <- file.path(base_dir, "func_annot_gff")
 nearest_kb <- 20
