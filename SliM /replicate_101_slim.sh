@@ -12,3 +12,9 @@ outdir="SLiM_update/outputs/NC_069101.1/replicate/rep${rep}"
 mkdir -p "$outdir"
 
 slim -d outdir='"'"$outdir"'"' simulate_NC_101.slim
+
+
+# Batch Submit 100 Repetitive Tasks
+for rep in $(seq 1 100); do
+    qsub simulate_rep.sh $rep  
+done
